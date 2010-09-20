@@ -22,5 +22,5 @@ NOTE: Currently we only support 128 char long paths and 64 char long target name
 Branchy uses the database to load all information.
 
 There are two tables in the dataBase:
-# main_branch - has information and options regarding the main branch (e.g. Path);
-# content - contains a simple look-up table that maps btarget with a real file and in case no entry is found branchy can be set to search for a file with the same name (+ '.php');
+main_branch - has information and options regarding the main branch (e.g. Path);
+content - contains a simple look-up table that maps btarget with a real file and in case no entry is found branchy can be set to search for a file with the same name (+ '.php');
