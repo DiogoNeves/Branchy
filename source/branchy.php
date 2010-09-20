@@ -55,7 +55,7 @@ assert( 'is_string( $path )' ); // Just in case we messed up the database table
 assert( 'strlen( $path ) > 0' );
 assert( 'strlen( $path ) <= 128' );
 
-NormalisePath( $path ); // So that we can use $path immediately :)
+$path = NormalisePath( $path ); // So that we can use $path immediately :)
 
 $targetPath = GetTargetPath( $dataBase, $target );
 if ( empty( $targetPath ) )
@@ -63,6 +63,8 @@ if ( empty( $targetPath ) )
 	// Target not found in the database, use default behaviour
 	$targetPath = "$target.php";
 }
+
+$targetPath = NormalisePath( $targetPath );
 
 // Create full file path
 $targetPath = BRANCH_BASE_PATH . "$path$targetPath";
@@ -168,7 +170,7 @@ function LogAndDieSafely( mysqli &$dataBase, $message, $verbose = false )
 }
 
 /**
- * Normalises a path by removing / from the start of the path and adding / to the end
+ * Normalises a path by removing / from the end of the path and adding / to the start
  *
  * @param string $path Path to normalise
  * @return string Normalised path
@@ -180,14 +182,12 @@ function NormalisePath( $path )
 	// Remove stupid spaces
 	$path = trim( $path );
 	
-	// Remove '/' from the start
+	// Remove '/' from the start and end
 	$path = ltrim( $path, '/' );
+	$path = rtrim( $path, '/' ); // This simplifies the next line
 	
-	// Add '/' to the end if it doesn't exist already
-	if ( strrpos( $path, '/' ) !== (strlen( $path ) - 1) )
-	{
-		$path .= '/';
-	}
+	// Add '/' to the end
+	$path = "/$path";
 	
 	return $path;
 }
