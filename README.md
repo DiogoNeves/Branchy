@@ -1,5 +1,15 @@
 Branchy is a light-weight framework to manage and load php files from different branches.
 
+## What can or will I be able to do with Branchy?
+
+* Organise the project in live servers
+* Test on the live server without any user noticing
+* Move all or some users to new versions without stopping the service at any point
+* Do simple A/B tests
+* Update the live server using a patch and only move users when it's ready and fully tested
+* Quickly revert server updates
+* Edit, push, revert branches easily with a simple web interface
+
 ## Finished Features
 
 * Simple branch load
@@ -11,11 +21,10 @@ Branchy is a light-weight framework to manage and load php files from different 
 ## Whish list
 
 * Simple branch editor (add and remove functionality)
-* Database Wrapper (so that the user can specify it's own DB connection)
-* Rename/Move branch editor functionality
-* Allow a file to be in a different branch then the main branch (and editor support)
-* Add user specific branches (and editor support)
+* Rename/Move branch (editor functionality)
+* Attach different users to different branches (and editor support)
 * A/B testing support
+* Database Wrapper (allow for abstract database accesses, currently only supports MySQL)
 
 ## Setup
 
