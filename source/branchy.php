@@ -30,7 +30,6 @@ assert( '!empty( $_GET[ \'btarget\' ] )' );
 
 // Base path were to find all branches
 define( 'BRANCH_BASE_PATH',		'branches/' );
-define( 'BRANCH_DEFAULT_PATH',	'default/' ); // Relative to BRANCH_BASE_PATH
 
 // Get safe target
 $target = $_GET[ 'btarget' ];
@@ -50,23 +49,7 @@ if ( $dataBase->connect_errno )
 }
 
 // Main loader code
-$branchQuery = "SELECT path FROM main_branch WHERE branch_uid=0;";
-$result = $dataBase->query( $branchQuery );
-
-// Look for errors and log them
-if ( !$result )
-{
-	LogAndDieSafely( $dataBase, "MySQL error<br/><br/>$branchQuery<br/>{$dataBase->errno}: {$dataBase->error}" );
-}
-
-// Check if we found the path
-if ( $result->num_rows != 1 )
-{
-	LogAndDieSafely( $dataBase, "Couldn't find the main branch path" );
-}
-
-// Ready! Read path
-$path = $result->fetch_object()->path;
+$path = GetMainBranchPath( $dataBase );
 
 assert( 'is_string( $path )' ); // Just in case we messed up the database table
 assert( 'strlen( $path ) > 0' );
@@ -74,15 +57,20 @@ assert( 'strlen( $path ) <= 128' );
 
 NormalisePath( $path ); // So that we can use $path immediately :)
 
-// TODO: Get target file path from Database (if not found check if we can use default)
+$targetPath = GetTargetPath( $dataBase, $target );
+if ( empty( $targetPath ) )
+{
+	// Target not found in the database, use default behaviour
+	$targetPath = "$target.php";
+}
 
 // Create full file path
-// TODO: Use the next line in case it doesn't have a 'content' entry
-$targetPath = BRANCH_BASE_PATH . "$path$target.php";
+$targetPath = BRANCH_BASE_PATH . "$path$targetPath";
 
 // Check if target file exists
 if ( file_exists( $targetPath ) )
 {
+	// Ok, we're done, include the file for execution
 	include $targetPath;
 }
 else
@@ -99,8 +87,77 @@ unset( $dataBase );
 // Methods
 //
 
+/**
+ * Get the main branch path from the Database
+ *
+ * @param mysqli $dataBase Database where to get the path from
+ * @return string Path to the main branch (relative to the app path)
+ */
+function GetMainBranchPath( mysqli $dataBase )
+{
+	assert( 'is_object( $dataBase )' );
+	
+	$branchQuery = "SELECT path FROM main_branch WHERE branch_uid=0;";
+	$result = $dataBase->query( $branchQuery );
+
+	// Look for errors and log them
+	if ( !$result )
+	{
+		LogAndDieSafely( $dataBase, "MySQL error<br/><br/>$branchQuery<br/>{$dataBase->errno}: {$dataBase->error}" );
+	}
+
+	// Check if we found the path
+	if ( $result->num_rows != 1 )
+	{
+		LogAndDieSafely( $dataBase, "Couldn't find the main branch path" );
+	}
+
+	// Ready! Fetch and return path
+	return $result->fetch_object()->path;
+}
+
+/**
+ * Looks-up for a target path in the content table on the database
+ *
+ * @param mysqli $dataBase Database where to look for the target
+ * @param string $target Target to look-up
+ * @return string The target path or "" if not in the database
+ */
+function GetTargetPath( mysqli $dataBase, $target )
+{
+	assert( 'is_object( $dataBase )' );
+	assert( 'is_string( $target )' );
+
+	$target = mysql_escape_string( $target );
+	
+	$targetQuery = "SELECT path FROM content WHERE target_name='$target';";
+	$result = $dataBase->query( $targetQuery );
+
+	// Look for errors and log them
+	if ( !$result )
+	{
+		LogAndDieSafely( $dataBase, "MySQL error<br/><br/>$targetQuery<br/>{$dataBase->errno}: {$dataBase->error}" );
+	}
+
+	assert( '$result->num_rows <= 1' );
+
+	// Ready! Fetch and return path
+	return ($result->num_rows == 1) ? $result->fetch_object()->path : "";
+}
+
+/**
+ * Log an error and die safely destroying the database object.
+ *
+ * @param mysqli $dataBase (Reference) Database to destroy
+ * @param string $message Message to log
+ * @param bool $verbose If true, prints the message to the client
+ */
 function LogAndDieSafely( mysqli &$dataBase, $message, $verbose = false )
 {
+	assert( 'is_object( $dataBase )' );
+	assert( 'is_string( $message )' );
+	assert( 'is_bool( $verbose )' );
+	
 	// Safely close database
 	$dataBase->close();
 	unset( $dataBase );
@@ -110,12 +167,28 @@ function LogAndDieSafely( mysqli &$dataBase, $message, $verbose = false )
 	die( $message );
 }
 
+/**
+ * Normalises a path by removing / from the start of the path and adding / to the end
+ *
+ * @param string $path Path to normalise
+ * @return string Normalised path
+ */
 function NormalisePath( $path )
 {
+	assert( 'is_string( $path )' );
+
+	// Remove stupid spaces
+	$path = trim( $path );
+	
+	// Remove '/' from the start
+	$path = ltrim( $path, '/' );
+	
+	// Add '/' to the end if it doesn't exist already
 	if ( strrpos( $path, '/' ) !== (strlen( $path ) - 1) )
 	{
 		$path .= '/';
 	}
+	
 	return $path;
 }
 
