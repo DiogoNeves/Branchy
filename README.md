@@ -1,9 +1,15 @@
 Branchy is a light-weight framework to manage and load php files from different branches.
 
+## Finished Features
+
+* Simple branch load
+
+## On the way
+
+* Simple branch viewer
+
 ## Whish list
 
-* Simple branch load (all files need to be available in the branch folder)
-* Simple branch viewer
 * Simple branch editor (add and remove functionality)
 * Database Wrapper (so that the user can specify it's own DB connection)
 * Rename/Move branch editor functionality
