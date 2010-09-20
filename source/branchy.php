@@ -39,7 +39,7 @@ $target = mysql_escape_string( $target );
 // It must be done after escaping because the string changes
 assert( 'is_string( $target )' );
 $length = strlen( $target );
-assert( $length > 0 && $length <= 64 );
+assert( '$length > 0 && $length <= 64' );
 
 // Connect to database to get information
 $dataBase = new mysqli( 'localhost', 'root', '', 'branchy' );
@@ -57,7 +57,12 @@ assert( 'strlen( $path ) <= 128' );
 
 $path = NormalisePath( $path ); // So that we can use $path immediately :)
 
+// Now it's the target path turn :)
 $targetPath = GetTargetPath( $dataBase, $target );
+
+assert( 'is_string( $path )' ); // Just in case we messed up the database table
+assert( 'strlen( $path ) <= 128' );
+
 if ( empty( $targetPath ) )
 {
 	// Target not found in the database, use default behaviour
